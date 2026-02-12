@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,7 +61,7 @@
   }
 }
 
-/* Custom Hayan Unified Dashboard Card */
+/* --- Hayan Unified Dashboard Card --- */
 .hayan-unified-card {
   display: flex;
   flex-direction: column;
@@ -275,7 +276,43 @@
   font-weight: 700;
 }
 
-/* Existing Custom Styles */
+/* --- Plant Toggle --- */
+.toggle-plant {
+  --bg-toggle: hsl(0, 0%, 96%);
+  --bg-circle: hsl(108, 25%, 45%);
+  width: 60px;
+  height: 32px;
+  background-color: var(--bg-toggle);
+  box-shadow: 0 .3rem 5rem 0 rgba(125, 125, 125, 0.15);
+  border-radius: 4rem;
+  display: flex;
+  align-items: center;
+  padding: 0 .2rem;
+  transition: background-color 400ms;
+  cursor: pointer;
+  position: relative;
+}
+
+.toggle-plant__circle {
+  width: 24px;
+  height: 24px;
+  background-color: var(--bg-circle);
+  border-radius: 50%;
+  position: relative;
+  transition: transform 400ms ease-in-out, background-color 1000ms;
+  z-index: 2;
+}
+
+.toggle-plant-input:checked + .toggle-plant > .toggle-plant__circle {
+  transform: translateX(-28px);
+  background-color: #fff;
+}
+
+.toggle-plant-input:checked + .toggle-plant {
+  --bg-toggle: hsl(108, 25%, 45%);
+}
+
+/* --- Button 01 --- */
 .button_01 {
   position: relative;
   padding-top: 15px;
@@ -298,6 +335,32 @@
   justify-content: center;
 }
 
+.tree {
+  position: absolute;
+  display: block;
+  left: -10px;
+  width: 45%;
+  height: 75%;
+  bottom: -5px;
+  transition-duration: 0.75s;
+  z-index: 1;
+}
+
+.wave {
+  position: absolute;
+  display: block;
+  top: 100%;
+  left: 0%;
+  z-index: 1;
+  transition-duration: 0.5s;
+  width: 100%;
+  height: 100%;
+}
+
+.button_01:hover .tree { bottom: -100%; }
+.button_01:hover .wave { top: 0%; }
+
+/* --- Welcome Button --- */
 .welcome-btn {
   position: relative;
   padding: 15px 45px;
@@ -311,6 +374,44 @@
   filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));
   transition: all 0.3s ease;
   overflow: visible;
+}
+
+.icon-1 {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 25px;
+  transform: rotate(10deg);
+  transition: all 0.5s ease-in-out;
+}
+
+.icon-2 {
+  position: absolute;
+  top: -5px;
+  left: 25px;
+  width: 12px;
+  transform: rotate(10deg);
+  transition: all 1s ease-in-out;
+}
+
+.switch {
+  font-size: 14px;
+  position: relative;
+  display: inline-block;
+  width: 3.5em;
+  height: 2em;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider-plant {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to bottom, skyblue 70%, #8B4513);
+  transition: .4s;
+  border-radius: 30px;
+  border: 2px solid #000;
 }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
