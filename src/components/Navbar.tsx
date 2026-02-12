@@ -2,7 +2,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Leaf, Trophy, LayoutDashboard, AlertCircle, User, ArrowRight, LayoutGrid, Gift } from 'lucide-react';
+import { Leaf, Trophy, LayoutDashboard, Info, User, ArrowRight, LayoutGrid, Gift } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ const navItems = [
   { href: '/challenges', label: 'التحديات', icon: Leaf },
   { href: '/rewards', label: 'المكافآت', icon: Gift },
   { href: '/leaderboard', label: 'المتصدرين', icon: Trophy },
-  { href: '/reports', label: 'البلاغات', icon: AlertCircle },
+  { href: '/reports', label: 'دليل حيّان', icon: Info },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -22,7 +22,7 @@ const pageTitles: Record<string, string> = {
   '/challenges': 'التحديات',
   '/rewards': 'المكافآت',
   '/leaderboard': 'لوحة الشرف',
-  '/reports': 'البلاغات البيئية',
+  '/reports': 'دليل حيّان',
   '/profile': 'الملف الشخصي',
   '/settings': 'الإعدادات',
 };

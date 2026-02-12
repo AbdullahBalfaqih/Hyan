@@ -1,286 +1,298 @@
-
 "use client"
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+    CloudSun,
+    Wind,
+    Calendar,
+    Trees,
+    Info,
+    Sun,
+    Palmtree,
+    Apple,
+    Loader2,
+    Clock,
+    CloudRain,
+    MapPin,
+    Sparkles
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Send, AlertTriangle, CheckCircle2, Loader2, XCircle, CloudUpload, FileText } from "lucide-react";
-import { useToast } from '@/hooks/use-toast';
-import { MOCK_RESOLVED_REPORTS } from '@/lib/mock-data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Image from "next/image";
 
-const KHOBAR_NEIGHBORHOODS = [
-  "الخبر الشمالية", "البندرية", "الحمراء", "الكورنيش", "العقربية", "الثقبة", "الروابي", "الأحياء الوسطى",
-  "الخبر الجنوبية", "الصدفة", "الراكة الجنوبية", "العليا", "الخزامى", "اليرموك", "الأحياء الشرقية",
-  "الكورنيش الجنوبي", "مدينة العمال", "الأحياء الغربية", "مدينة الملك فهد السكنية", "مدينة سلطان",
-  "الهدا", "الجسر", "الأحياء الحديثة", "الحزام الذهبي"
+const TREE_DATA = [
+    {
+        name: "النخيل (الأحساء والقطيف)",
+        desc: "الأبرز بلا منازع، والأحساء من أكبر واحات النخيل في العالم. تشمل أصناف الخلاص والرزيز والشيشي.",
+        icon: Palmtree,
+        tags: ["يتحمل الحرارة", "إنتاج محلي"],
+        bgImage: "https://res.cloudinary.com/ddznxtb6f/image/upload/v1770890299/Screenshot_2026-02-12_125803_gikyk3.png"
+    },
+    {
+        name: "الحمضيات",
+        desc: "برتقال، ليمون، نارنج، يوسفي. تزدهر شتاءً وبداية الربيع في القطيف والأحساء.",
+        icon: Apple,
+        tags: ["شتاءً", "ربيعاً"],
+        bgImage: "https://res.cloudinary.com/ddznxtb6f/image/upload/v1770890371/Screenshot_2026-02-12_125920_df6pvc.png"
+    },
+    {
+        name: "المانجو",
+        desc: "يزرع في أجزاء من الأحساء والساحل الدافئ. إنتاجه صيفي بامتياز.",
+        icon: Trees,
+        tags: ["صيفياً"],
+        bgImage: "https://res.cloudinary.com/ddznxtb6f/image/upload/v1770890267/Screenshot_2026-02-12_125713_fiwyi7.png"
+    },
+    {
+        name: "أشجار السدر (والغاف)",
+        desc: "أشجار تتحمل الملوحة والحر، مثالية للتشجير الحضري وزيادة الغطاء النباتي.",
+        icon: Sun,
+        tags: ["تحمل عالي", "زينة"],
+        bgImage: "https://res.cloudinary.com/ddznxtb6f/image/upload/v1770890327/Screenshot_2026-02-12_125838_ty4wek.png"
+    }
 ];
 
-export default function ReportsPage() {
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [images, setImages] = useState<{ before: string | null; after: string | null }>({ before: null, after: null });
-  const { toast } = useToast();
+const CALENDAR_DATA = [
+    { month: "يناير", event: "ذروة موسم الحمضيات (قطاف برتقال/ليمون). عناية وتقليم." },
+    { month: "فبراير", event: "استمرار الحمضيات. بدء تجهيز مزارع النخيل للتلقيح." },
+    { month: "مارس", event: "تلقيح النخيل (مرحلة مهمة). نهاية موسم أغلب الحمضيات." },
+    { month: "أبريل", event: "عقد ثمار النخيل. نمو مبكر للمانجو." },
+    { month: "مايو", event: "اشتداد الحرارة. متابعة ريّ النخيل والمانجو." },
+    { month: "يونيو", event: "بداية نضج بعض أصناف الرطب المبكرة. المانجو يبدأ." },
+    { month: "يوليو", event: "موسم الرطب (بداية حصاد مبكر لبعض الأصناف). ذروة المانجو." },
+    { month: "أغسطس", event: "ذروة تمور الخلاص في الأحساء. استمرار الرطب." },
+    { month: "سبتمبر", event: "استمرار حصاد التمور المتأخرة. تجهيز الزراعات الشتوية." },
+    { month: "أكتوبر", event: "زراعة شتوية. تحضير أشجار الحمضيات للإزهار." },
+    { month: "نوفمبر", event: "نضج الحمضيات المبكرة. طقس مناسب لغرس الأشجار الجديدة." },
+    { month: "ديسمبر", event: "موسم الحمضيات يعود بقوة. تقليم وزراعة شتلات." }
+];
 
-  const handleFileUpload = (type: 'before' | 'after', e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prev => ({ ...prev, [type]: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+export default function EnvironmentGuidePage() {
+    const [currentMonth, setCurrentMonth] = useState("");
+    const [currentAdvice, setCurrentAdvice] = useState("");
+    const [weatherData, setWeatherData] = useState<{ temp: number; wind: number; condition: string } | null>(null);
+    const [loadingWeather, setLoadingWeather] = useState(true);
+    const [formattedDate, setFormattedDate] = useState("");
+    const [formattedTime, setFormattedTime] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      setSubmitted(true);
-      toast({
-        title: "تم استلام البلاغ",
-        description: "شكراً لمساهمتك في تحسين جودة الحي. سيتم المراجعة والمعالجة قريباً.",
-      });
-    }, 1500);
-  };
+    useEffect(() => {
+        const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        const now = new Date();
+        const monthIndex = now.getMonth();
+        setCurrentMonth(months[monthIndex]);
 
-  if (submitted) {
+        setFormattedDate(now.toLocaleDateString('ar-SA', { day: 'numeric', month: 'long' }));
+        setFormattedTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
+
+        const adviceMap: Record<string, string> = {
+            "يناير": "استمتع بموسم الحمضيات وقطاف الليمون الحساوي!",
+            "فبراير": "الجو معتدل جداً! ينصح ببدء تجهيز النخيل للتلقيح والاستمتاع بقطاف ليمون الشرقية.",
+            "مارس": "وقت تلقيح النخيل قد حان، اهتم بالأشجار المثمرة.",
+            "أغسطس": "الحرارة عالية، تأكد من ري الأشجار في المساء وحصاد تمور الخلاص.",
+            "نوفمبر": "أفضل وقت لغرس الأشجار الجديدة في حيك!",
+        };
+        setCurrentAdvice(adviceMap[months[monthIndex]] || "استمتع بالأجواء وراقب دورة الطبيعة في حيك.");
+
+        const fetchWeather = async () => {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=26.4207&longitude=50.0888&current_weather=true');
+                const data = await res.json();
+                if (data.current_weather) {
+                    setWeatherData({
+                        temp: Math.round(data.current_weather.temperature),
+                        wind: data.current_weather.windspeed,
+                        condition: "Sunny"
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch weather", error);
+            } finally {
+                setLoadingWeather(false);
+            }
+        };
+        fetchWeather();
+    }, []);
+
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center min-h-[70vh] text-right" dir="rtl">
-        <Card className="max-w-md w-full text-center p-10 space-y-8 rounded-[3.5rem] shadow-2xl border-none bg-white">
-          <div className="w-24 h-24 bg-green-100 text-green-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-sm">
-            <CheckCircle2 className="h-12 w-12" />
-          </div>
-          <div className="space-y-3">
-            <h2 className="text-3xl font-black text-foreground">شكراً لمساهمتك!</h2>
-            <p className="text-muted-foreground font-black text-lg">تم تسجيل بلاغك بنجاح برقم #12543. يمكنك متابعة حالة البلاغ من ملفك الشخصي.</p>
-          </div>
-          <div className="space-y-4 pt-4">
-            <Button className="w-full rounded-[1.5rem] h-16 text-xl font-black bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/20 border-none" onClick={() => setSubmitted(false)}>تقديم بلاغ آخر</Button>
-            <Button variant="ghost" className="w-full rounded-2xl h-12 font-black text-muted-foreground">العودة للرئيسية</Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
+        <div className="container mx-auto p-6 space-y-12 pb-32 md:pb-12 text-right" dir="rtl">
+            {/* Page Header */}
+            <div className="space-y-3">
+                <h1 className="text-4xl font-black font-headline text-foreground tracking-tight">دليل حيّان البيئي</h1>
+                <p className="text-muted-foreground font-black text-lg">رفيقك الذكي للاستدامة والزراعة في المنطقة الشرقية.</p>
+            </div>
 
-  return (
-    <div className="container mx-auto p-6 space-y-10 pb-32 md:pb-8 text-right" dir="rtl">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-black font-headline text-foreground">الإبلاغ البيئي</h1>
-        <p className="text-muted-foreground font-black">ساهم في رصد التشوهات البصرية لتحسين جودة الحياة في حيك.</p>
-      </div>
+            <Separator className="bg-primary/10 h-[1.5px]" />
 
-      <Separator className="bg-primary/10 h-[1.5px]" />
+            {/* Unified Merged Dashboard Widget */}
+            <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, damping: 25 }}
+                className="flex justify-center"
+            >
+                <div className="hayan-unified-card">
+                    {/* Top Section: Weather Circles Design */}
+                    <section className="hayan-info-section">
+                        <div className="hayan-background-design">
+                            <div className="hayan-circle"></div>
+                            <div className="hayan-circle"></div>
+                            <div className="hayan-circle"></div>
+                        </div>
 
-      <div className="grid gap-10 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card className="rounded-[3.5rem] border-none shadow-2xl shadow-black/5 bg-white overflow-hidden">
-            <CardHeader className="p-10 pb-4">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                  <FileText className="h-7 w-7" />
+                        <div className="hayan-left-content">
+                            <div className="hayan-weather-status">
+                                <Sun className="hayan-weather-icon text-white" />
+                                <span>{weatherData?.condition || "Sunny"}</span>
+                            </div>
+                            <div>
+                                <div className="hayan-temp-display">{weatherData?.temp ?? '--'}°</div>
+                                <div className="hayan-temp-range">28° / 42°</div>
+                            </div>
+                        </div>
+
+                        <div className="hayan-right-content">
+                            <div className="hayan-time-date">
+                                <div className="hayan-current-time">{formattedTime || "00:00"}</div>
+                                <div className="hayan-current-date">{formattedDate || "---"}</div>
+                            </div>
+                            <div className="hayan-city-label">المنطقة الشرقية</div>
+                        </div>
+                    </section>
+
+                    {/* Middle Section: Forecast Tabs */}
+                    <section className="hayan-forecast-section">
+                        <div className="hayan-forecast-item">
+                            <span className="hayan-day-name">FRI</span>
+                            <Sun className="hayan-day-icon" />
+                        </div>
+                        <div className="hayan-forecast-item">
+                            <span className="hayan-day-name">THU</span>
+                            <CloudRain className="hayan-day-icon" />
+                        </div>
+                        <div className="hayan-forecast-item">
+                            <span className="hayan-day-name">WED</span>
+                            <CloudRain className="hayan-day-icon" />
+                        </div>
+                        <div className="hayan-forecast-item">
+                            <span className="hayan-day-name">TUE</span>
+                            <Sun className="hayan-day-icon" />
+                        </div>
+                    </section>
+
+                    {/* Bottom Section: Advice & Insights */}
+                    <section className="hayan-advice-section">
+                        <div className="hayan-advice-header">
+                            <Badge className="hayan-advice-badge">نصيحة {currentMonth}</Badge>
+                            <div className="hayan-wind-speed">
+                                <Wind className="h-4 w-4" />
+                                <span>{weatherData?.wind ?? '--'} كم/س</span>
+                            </div>
+                        </div>
+                        <h2 className="hayan-advice-text">
+                            {currentAdvice}
+                        </h2>
+                        <div className="flex items-center gap-2 text-primary/60 mt-2">
+                            <Sparkles className="h-5 w-5" />
+                            <span className="text-[10px] font-black">مدعوم بذكاء حيّان البيئي</span>
+                        </div>
+                    </section>
                 </div>
-                <div>
-                  <CardTitle className="font-black text-3xl text-foreground">تفاصيل البلاغ</CardTitle>
-                  <CardDescription className="font-black text-base text-muted-foreground mt-1">يرجى تزويدنا بمعلومات دقيقة عن المشكلة التي رصدتها.</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-10 pt-4">
-              <form onSubmit={handleSubmit} className="space-y-10">
-                <div className="space-y-8">
-                  <div className="space-y-3">
-                    <Label className="font-black text-foreground text-lg mr-1">نوع المشكلة</Label>
-                    <Select required>
-                      <SelectTrigger className="rounded-[1.5rem] h-16 bg-secondary/40 border-primary/5 hover:bg-secondary/60 transition-colors text-right font-black px-6 text-lg">
-                        <SelectValue placeholder="اختر النوع" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl font-black">
-                        <SelectItem value="waste">تراكم نفايات</SelectItem>
-                        <SelectItem value="signs">لوحات تالفة</SelectItem>
-                        <SelectItem value="construction">مخلفات بناء</SelectItem>
-                        <SelectItem value="noise">ضوضاء مستمرة</SelectItem>
-                        <SelectItem value="visual">تشوه بصري آخر</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            </motion.div>
 
-                  <div className="space-y-3">
-                    <Label className="font-black text-foreground text-lg mr-1">الموقع (حي الخبر)</Label>
-                    <Select required>
-                      <SelectTrigger className="rounded-[1.5rem] h-16 bg-secondary/40 border-primary/5 hover:bg-secondary/60 transition-colors text-right font-black px-6 text-lg">
-                        <SelectValue placeholder="اختر الحي" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl font-black max-h-[300px]">
-                        {KHOBAR_NEIGHBORHOODS.map((hood) => (
-                          <SelectItem key={hood} value={hood}>{hood}</SelectItem>
+            <Separator className="bg-primary/10 h-[1.5px]" />
+
+            {/* Main Content Tabs */}
+            <Tabs defaultValue="trees" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-secondary/30 rounded-2xl p-1 h-14 mb-10">
+                    <TabsTrigger value="trees" className="rounded-xl font-black text-lg data-[state=active]:bg-white data-[state=active]:shadow-md">أشجار الشرقية</TabsTrigger>
+                    <TabsTrigger value="calendar" className="rounded-xl font-black text-lg data-[state=active]:bg-white data-[state=active]:shadow-md">التقويم السنوي</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="trees" className="space-y-8">
+                    <div className="grid gap-8 sm:grid-cols-2">
+                        {TREE_DATA.map((tree, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: i * 0.1 }}
+                                className="h-full"
+                            >
+                                <Card className="rounded-[3rem] border-none shadow-xl bg-white overflow-hidden h-full flex flex-col relative group">
+                                    <div className="absolute inset-0 z-0">
+                                        <Image
+                                            src={tree.bgImage}
+                                            alt={tree.name}
+                                            fill
+                                            className="object-cover opacity-100 group-hover:scale-105 transition-transform duration-1000"
+                                        />
+                                        <div className="absolute inset-0 bg-white/10" />
+                                    </div>
+
+                                    <div className="relative z-10 p-10 h-full flex flex-col justify-between space-y-4">
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div className="p-4 rounded-2xl bg-white/95 border border-primary/20 text-primary shadow-xl">
+                                                    <tree.icon className="h-8 w-8" />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {tree.tags.map(tag => (
+                                                        <Badge key={tag} variant="secondary" className="text-[11px] font-black rounded-full px-4 py-1.5 bg-primary/20 text-primary border-none shadow-none">{tag}</Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="pt-4">
+                                                <h4 className="text-3xl font-black text-foreground drop-shadow-md">{tree.name}</h4>
+                                                <p className="text-base font-bold text-foreground mt-4 leading-relaxed bg-white/80 p-6 rounded-2xl backdrop-blur-xl border border-white/50 shadow-lg">{tree.desc}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </motion.div>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="font-black text-foreground text-lg mr-1">وصف المشكلة</Label>
-                    <Textarea 
-                      placeholder="تقاطع شارعي 5 و 4، المشكلة تكمن في..." 
-                      className="min-h-[180px] rounded-[2rem] bg-secondary/40 border-primary/5 focus:bg-white transition-all resize-none text-right font-black p-6 text-lg" 
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <Separator className="bg-primary/10 h-[1.5px]" />
-
-                <div className="space-y-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
-                      <CloudUpload className="h-6 w-6" />
                     </div>
-                    <Label className="font-black text-foreground text-xl">توثيق الصورة</Label>
-                  </div>
-                  
-                  <div className="grid gap-8 sm:grid-cols-2">
-                    {/* Before Photo */}
-                    <div className="space-y-4">
-                      <p className="text-sm font-black text-center text-muted-foreground bg-secondary/50 py-3 rounded-2xl">صورة البلاغ (مطلوب)</p>
-                      {images.before ? (
-                        <div className="relative w-full aspect-square rounded-[2.5rem] overflow-hidden border-4 border-primary/10 shadow-lg group">
-                          <img src={images.before} alt="Before" className="object-cover w-full h-full" />
-                          <Button 
-                            variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full h-12 w-12 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => setImages(prev => ({ ...prev, before: null }))}
-                          >
-                            <XCircle className="h-6 w-6" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="file-upload-form w-full">
-                          <label htmlFor="file-before" className="file-upload-label w-full border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all rounded-[2.5rem] p-12 flex flex-col items-center justify-center cursor-pointer">
-                            <div className="flex flex-col items-center gap-4">
-                               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                  <svg viewBox="0 0 640 512" className="h-10 w-10 fill-primary/40">
-                                    <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"></path>
-                                  </svg>
-                               </div>
-                               <div className="text-center">
-                                 <p className="font-black text-foreground">اسحب الصورة أو أفلتها</p>
-                                 <p className="text-xs font-bold text-muted-foreground mt-1">أو</p>
-                                 <span className="browse-button inline-block mt-3 bg-primary/20 text-primary px-6 py-2 rounded-xl font-black">تصفح الصور</span>
-                               </div>
+
+                    <Card className="rounded-[3rem] border-none bg-black p-10 text-white shadow-2xl">
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 rounded-2xl bg-primary/20 text-primary">
+                                <Info className="h-8 w-8" />
                             </div>
-                            <input id="file-before" type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload('before', e)} />
-                          </label>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* After Photo (Optional) */}
-                    <div className="space-y-4">
-                      <p className="text-sm font-black text-center text-muted-foreground bg-secondary/50 py-3 rounded-2xl">صورة إضافية (اختياري)</p>
-                      {images.after ? (
-                        <div className="relative w-full aspect-square rounded-[2.5rem] overflow-hidden border-4 border-primary/10 shadow-lg group">
-                          <img src={images.after} alt="After" className="object-cover w-full h-full" />
-                          <Button 
-                            variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full h-12 w-12 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => setImages(prev => ({ ...prev, after: null }))}
-                          >
-                            <XCircle className="h-6 w-6" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="file-upload-form w-full">
-                          <label htmlFor="file-after" className="file-upload-label w-full border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all rounded-[2.5rem] p-12 flex flex-col items-center justify-center cursor-pointer">
-                            <div className="flex flex-col items-center gap-4">
-                               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                  <svg viewBox="0 0 640 512" className="h-10 w-10 fill-primary/40">
-                                    <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"></path>
-                                  </svg>
-                               </div>
-                               <div className="text-center">
-                                 <p className="font-black text-foreground">اسحب الصورة أو أفلتها</p>
-                                 <p className="text-xs font-bold text-muted-foreground mt-1">أو</p>
-                                 <span className="browse-button inline-block mt-3 bg-primary/20 text-primary px-6 py-2 rounded-xl font-black">تصفح الصور</span>
-                               </div>
+                            <div className="space-y-2">
+                                <h4 className="font-black text-white text-2xl">بماذا تشتهر الشرقية؟</h4>
+                                <p className="text-lg font-bold text-gray-400 leading-relaxed">تمور الأحساء (الخلاص) هي علامة تجارية عالمية، وحمضيات القطيف تشتهر بجودتها العالية منذ القدم.</p>
                             </div>
-                            <input id="file-after" type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload('after', e)} />
-                          </label>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                    </Card>
+                </TabsContent>
 
-                <Separator className="bg-primary/10 h-[1.5px]" />
-
-                <Button type="submit" className="w-full rounded-[2rem] h-20 text-2xl font-black shadow-2xl bg-primary text-white hover:bg-primary/90 border-none transition-all active:scale-[0.98] mt-4" disabled={submitting}>
-                  {submitting ? (
-                    <><Loader2 className="ml-4 h-8 w-8 animate-spin" /> جاري الإرسال...</>
-                  ) : (
-                    <><Send className="ml-4 h-8 w-8 rotate-180" /> إرسال البلاغ الآن</>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                <TabsContent value="calendar">
+                    <Card className="rounded-[3.5rem] border-none shadow-2xl bg-white overflow-hidden">
+                        <ScrollArea className="h-[600px] w-full p-8">
+                            <div className="space-y-6">
+                                {CALENDAR_DATA.map((item, i) => (
+                                    <div
+                                        key={i}
+                                        className={`flex items-start gap-8 p-8 rounded-[2.5rem] transition-all ${currentMonth === item.month ? 'bg-primary/10 border-r-8 border-primary shadow-inner' : 'bg-secondary/20'}`}
+                                    >
+                                        <div className="min-w-[100px] text-center">
+                                            <span className={`text-2xl font-black ${currentMonth === item.month ? 'text-primary' : 'text-foreground'}`}>{item.month}</span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-lg font-bold text-muted-foreground leading-relaxed">{item.event}</p>
+                                        </div>
+                                        {currentMonth === item.month && (
+                                            <Badge className="bg-primary text-white font-black px-6 py-2 rounded-full text-xs border-none shadow-lg">الشهر الحالي</Badge>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
-
-        <div className="space-y-10">
-          <Card className="bg-primary/5 border-primary/20 rounded-[3.5rem] border-none shadow-sm p-2">
-            <CardHeader className="p-10 pb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                  <AlertTriangle className="h-7 w-7" />
-                </div>
-                <CardTitle className="text-2xl font-black text-foreground">لماذا نبلغ؟</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="p-10 pt-4 text-base space-y-6 text-muted-foreground leading-relaxed font-black">
-              <p>تساعد بلاغاتك الجهات الرسمية في تحديد أولويات المعالجة وتحسين المراقبة البيئية في أحياء الخبر العزيزة.</p>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-primary">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  الحفاظ على جمالية حيك السكني
-                </li>
-                <li className="flex items-center gap-3 text-primary">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  منع انتشار الأمراض والروائح
-                </li>
-                <li className="flex items-center gap-3 text-primary">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  كسب نقاط إضافية وترقية مستواك
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[3.5rem] border-none shadow-2xl shadow-black/5 bg-white">
-            <CardHeader className="p-10 pb-4">
-              <CardTitle className="text-2xl font-black text-foreground flex items-center gap-3">
-                <div className="w-2 h-8 bg-accent rounded-full" />
-                بلاغات تم حلها
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-10 pt-4 space-y-8">
-              {MOCK_RESOLVED_REPORTS.map((item, i) => (
-                <div key={i} className="flex flex-col gap-3 border-r-4 border-green-500 pr-6 py-2 bg-secondary/20 rounded-l-[1.5rem]">
-                  <p className="font-black text-lg text-foreground">{item.title}</p>
-                  <p className="text-sm font-bold text-muted-foreground">{item.hood}</p>
-                  <div className="flex justify-between items-center text-xs font-black">
-                    <span className="text-green-600 px-3 py-1 bg-green-100 rounded-lg">✓ {item.status}</span>
-                    <span className="text-muted-foreground">{item.time}</span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }
